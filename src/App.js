@@ -1,23 +1,31 @@
-import logo from './logo.svg';
+
+import { useEffect, useState } from 'react';
 import './App.css';
+import AuthPage from './components/auth/auth.component';
+import { onAuthChangedListener, signOutUser } from './components/utils/firebase/firebase.utils';
 
 function App() {
+
+  const [currentUser, setCurrentUser] = useState(null);
+
+
+  useEffect(() => {
+    const unsubscribe = onAuthChangedListener((user) => {
+      setCurrentUser(user);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const handleSignOut = async () => {
+    await signOutUser();
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      {
+        currentUser ? <button onClick={handleSignOut}>Sign Out</button> : <AuthPage />
+      }
     </div>
   );
 }
