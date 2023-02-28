@@ -1,30 +1,58 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import './App.css';
 import AuthPage from './components/auth/auth.component';
-import { onAuthChangedListener, signOutUser } from './components/utils/firebase/firebase.utils';
+import Dashboard from './components/dashboard/dashboard.component';
+import { setAllTasks } from './components/store/tasks/task.reducer';
+import { setCurrentUser } from './components/store/user/user.reducer';
+import { selectCurrentUser } from './components/store/user/user.selector';
+import { getDataFromFirebase, getUserDetails, onAuthChangedListener } from './components/utils/firebase/firebase.utils';
 
 function App() {
 
-  const [currentUser, setCurrentUser] = useState(null);
+  const currentUser = useSelector(selectCurrentUser);
 
+  const dispatch = useDispatch();
+
+  const storeUserDataInStore = (userDetails) => {
+    dispatch(setCurrentUser(userDetails));
+  }
+
+  const storeTasksDataInReduxStore = (tasks) => {
+    dispatch(setAllTasks(tasks));
+  }
 
   useEffect(() => {
-    const unsubscribe = onAuthChangedListener((user) => {
-      setCurrentUser(user);
+    const unsubscribe = onAuthChangedListener(async (user) => {
+      const userDetails = user && ((user) => ({ displayName: user.displayName, email: user.email, uid: user.uid }))(user);
+
+      if (userDetails) await getDataFromFirebase(userDetails.uid, storeTasksDataInReduxStore);
+
+
+      if (user && !userDetails.displayName) {
+        setTimeout(
+          async () => {
+            await getUserDetails(userDetails, storeUserDataInStore);
+            return;
+          }, 1000
+        )
+      }
+
+      dispatch(setCurrentUser(userDetails));
     });
 
     return unsubscribe;
   }, []);
 
-  const handleSignOut = async () => {
-    await signOutUser();
-  }
+
+
+
 
   return (
     <div>
       {
-        currentUser ? <button onClick={handleSignOut}>Sign Out</button> : <AuthPage />
+        currentUser ? <Dashboard /> : <AuthPage />
       }
     </div>
   );

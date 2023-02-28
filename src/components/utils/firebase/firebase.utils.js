@@ -18,9 +18,7 @@ import {
     doc,
     getDoc,
     setDoc,
-    collection,
-    writeBatch,
-    query,
+    onSnapshot,
     getDocs
 } from 'firebase/firestore';
 
@@ -46,8 +44,6 @@ googleProvider.setCustomParameters({
 export const auth = getAuth();
 
 export const signInWithGooglePopup = () => signInWithPopup(auth, googleProvider);
-
-export const db = getFirestore();
 
 
 export const createUserDocumentFromAuth = async (userAuth, additionalInformation = {}) => {
@@ -98,3 +94,38 @@ export const signAuthUserWithEmailAndPassword = async (email, password) => {
 export const signOutUser = () => signOut(auth);
 
 export const onAuthChangedListener = (callback) => onAuthStateChanged(auth, callback);
+
+
+export const getUserDetails = async (userDetails, storeUserDataInStore) => {
+    try {
+        const docRef = doc(db, "users", userDetails.uid);
+        const docSnap = await getDoc(docRef);
+
+        if (!docSnap.data()) return;
+
+        const { displayName } = docSnap.data();
+
+        storeUserDataInStore({ ...userDetails, displayName });
+    }
+    catch (e) {
+        console.log(e)
+    }
+
+}
+
+export const db = getFirestore();
+
+export const storeDataInFirebase = async (uid, tasks) => {
+
+    await setDoc(doc(db, "user-tasks", uid), { tasks });
+}
+
+export const getDataFromFirebase = async (uid, setDataInReduxStore) => {
+    const docSnap = await getDoc(doc(db, "user-tasks", uid));
+
+    if (!docSnap.data()) return;
+
+    const { tasks } = docSnap.data();
+
+    setDataInReduxStore(tasks);
+}

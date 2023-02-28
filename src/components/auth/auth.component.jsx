@@ -13,6 +13,14 @@ const AuthPage = () => {
             {
                 showLogInPage ? <LogIn setShowLogInPage={setShowLogInPage} /> : <SignUp setShowLogInPage={setShowLogInPage} />
             }
+
+            <p className="text-center mt-10">
+                <span className="mb-2 text-red-600 text-lg font-bold">For Demo </span>
+                <br />
+                Email: test@gmail.com
+                <br />
+                password: 123456
+            </p>
         </div>
     )
 };
